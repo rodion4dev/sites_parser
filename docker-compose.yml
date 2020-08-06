@@ -1,19 +1,20 @@
 version: '3.8'
 services:
 
-  backend:
+  api:
     build: .
     command: ["flask", "run", "--host", "0.0.0.0"]
-    depends_on:
-      - database
     env_file:
-      - .example.env
+      - .example.api.env
     environment:
       FLASK_ENV: 'development'
     ports:
       - '5000:5000'
     volumes:
-      - './site_parser:/usr/src/app/site_parser'
+      - './api:/usr/src/app/api'
 
-  database:
+  broker:
     image: redis:6.0-alpine
+
+  tasks-caller:
+    build: .
