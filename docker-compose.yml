@@ -3,12 +3,15 @@ services:
 
   backend:
     build: .
+    command: ["flask", "run", "--host", "0.0.0.0"]
     depends_on:
       - database
     env_file:
       - .example.env
+    environment:
+      FLASK_ENV: 'development'
     ports:
-      - '8000:8000'
+      - '5000:5000'
     volumes:
       - './site_parser:/usr/src/app/site_parser'
 
