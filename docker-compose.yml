@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+
+  backend:
+    build: .
+    depends_on:
+      - database
+    ports:
+      - '8000:8000'
+    volumes:
+      - './site_parser:/usr/src/app/site_parser'
+
+  database:
+    image: redis:6.0-alpine
