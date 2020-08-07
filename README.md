@@ -12,6 +12,10 @@ docker-compose build
 docker-compose up
 ```
 
+### Интерфейс
+
+**Путь**: `http://localhost:5000/`
+
 ## Боевая среда
 
 ### Требования
