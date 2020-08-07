@@ -1,4 +1,4 @@
-from tasks_call.celery import application
+from parse_execute.celery import application
 
 
 @application.task
