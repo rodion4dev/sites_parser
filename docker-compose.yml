@@ -21,3 +21,5 @@ services:
 
   tasks-caller:
     build: .
+    env_file:
+      - .example.tasks_call.env
