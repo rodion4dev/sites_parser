@@ -5,10 +5,11 @@ services:
     build: .
     command: ["flask", "run", "--host", "0.0.0.0"]
     depends_on:
-      - broker
+      - database
       - tasks-caller
     env_file:
       - .example.api.env
+      - .celery.env
     environment:
       FLASK_ENV: 'development'
     ports:
@@ -16,15 +17,15 @@ services:
     volumes:
       - './api:/usr/src/app/api'
 
-  broker:
+  database:
     image: redis:6.0-alpine
 
   tasks-caller:
     build: .
     command: ["celery", "worker", "--app", "tasks_call", "--loglevel=INFO"]
     depends_on:
-      - broker
+      - database
     env_file:
-      - .example.tasks_call.env
+      - .celery.env
     volumes:
       - './tasks_call:/usr/src/app/tasks_call'
