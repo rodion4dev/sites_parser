@@ -4,6 +4,9 @@ services:
   api:
     build: .
     command: ["flask", "run", "--host", "0.0.0.0"]
+    depends_on:
+      - broker
+      - tasks-caller
     env_file:
       - .example.api.env
     environment:
