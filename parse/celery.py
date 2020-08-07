@@ -51,8 +51,8 @@ backend = backend_url_template.format(
 )
 
 application = Celery(
-    main='parse_execute',
+    main='parse',
     backend=backend,
     broker=broker,
-    include=['parse_execute.tasks'],
+    include=['parse.tasks'],
 )

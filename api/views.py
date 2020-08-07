@@ -74,6 +74,6 @@ def create_task():
         return
 
     result: AsyncResult = celery.application.send_task(
-        'parse_execute.tasks.parse_site', args=[site_url]
+        'parse.tasks.parse_site', args=[site_url]
     )
     return jsonify(identifier=result.id), 201

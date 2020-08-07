@@ -1,5 +1,5 @@
 """Набор задач для проекта."""
-from parse_execute.celery import application
+from parse.celery import application
 
 
 @application.task
