@@ -6,7 +6,7 @@ services:
     command: ["flask", "run", "--host", "0.0.0.0"]
     depends_on:
       - database
-      - tasks-caller
+      - parse-executor
     env_file:
       - .example.api.env
       - .celery.env
@@ -20,12 +20,12 @@ services:
   database:
     image: redis:6.0-alpine
 
-  tasks-caller:
+  parse-executor:
     build: .
-    command: ["celery", "worker", "--app", "tasks_call", "--loglevel=INFO"]
+    command: ["celery", "worker", "--app", "parse_execute", "--loglevel=INFO"]
     depends_on:
       - database
     env_file:
       - .celery.env
     volumes:
-      - './tasks_call:/usr/src/app/tasks_call'
+      - './parse_execute:/usr/src/app/parse_execute'
