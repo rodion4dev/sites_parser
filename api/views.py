@@ -1,11 +1,15 @@
+import json
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlparse
 from uuid import UUID
 
 from celery.result import AsyncResult
 from flask import Blueprint, abort, jsonify, request
+from redis import Redis, ConnectionError as RedisConnectionError
 
 from api import celery
+from tasks_call.celery import Config
 
 blueprint = Blueprint('views', __name__, url_prefix='/')
 
@@ -26,10 +30,25 @@ def internal_server_error(error):
             HTTPStatus.INTERNAL_SERVER_ERROR.value)
 
 
-@blueprint.route('/task/<uuid:identifier>/status', methods=['GET'])
+@blueprint.route('/task/<uuid:identifier>', methods=['GET'])
 def get_task(identifier: UUID):
     """Получения состояния задачи."""
-    return jsonify()
+    config = Config()
+    try:
+        redis = Redis(host=config.CELERY_RESULTS_BACKEND_HOST,
+                      port=config.CELERY_RESULTS_BACKEND_PORT,
+                      db=config.CELERY_RESULTS_BACKEND_VIRTUAL_HOST,
+                      decode_responses=True)
+        task = redis.get(f'celery-task-meta-{identifier}')
+    except RedisConnectionError as error:
+        getLogger(__name__).critical(f'Ошибка соединения с Redis: {error}')
+        abort(500, description='Ошибка на стороне сервера, попробуйте позже.')
+        return
+
+    if not task:
+        abort(HTTPStatus.NOT_FOUND.value, description='Задача не найдена.')
+        return
+    return jsonify(json.loads(task))
 
 
 def url_is_valid(url: str) -> bool:
@@ -51,6 +70,6 @@ def create_task():
               description='Указанный URL некорректный.')
         return
 
-    result: AsyncResult = celery.application.send_task('tasks.parse_site',
-                                                       args=[site_url])
+    result: AsyncResult = celery.application.send_task(
+        'tasks_call.tasks.parse_site', args=[site_url])
     return jsonify(identifier=result.id)
