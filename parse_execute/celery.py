@@ -1,3 +1,4 @@
+"""Модуль с настройками Celery очередей."""
 import os
 
 from celery import Celery

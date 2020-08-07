@@ -1,3 +1,4 @@
+"""Набор задач для проекта."""
 from parse_execute.celery import application
 
 
