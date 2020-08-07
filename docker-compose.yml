@@ -21,7 +21,10 @@ services:
 
   tasks-caller:
     build: .
+    command: ["celery", "worker", "--app", "tasks_call", "--loglevel=INFO"]
     depends_on:
       - broker
     env_file:
       - .example.tasks_call.env
+    volumes:
+      - './tasks_call:/usr/src/app/tasks_call'
