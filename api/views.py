@@ -9,7 +9,7 @@ from flask import Blueprint, abort, jsonify, request
 from redis import Redis, ConnectionError as RedisConnectionError
 
 from api import celery
-from tasks_call.celery import Config
+from api.settings import config
 
 blueprint = Blueprint('views', __name__, url_prefix='/')
 
@@ -33,7 +33,6 @@ def internal_server_error(error):
 @blueprint.route('/task/<uuid:identifier>', methods=['GET'])
 def get_task(identifier: UUID):
     """Получения состояния задачи."""
-    config = Config()
     try:
         redis = Redis(host=config.CELERY_RESULTS_BACKEND_HOST,
                       port=config.CELERY_RESULTS_BACKEND_PORT,
