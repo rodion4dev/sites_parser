@@ -31,6 +31,8 @@ def parse_site(site_url: str):
     site_content = site_response.content.decode()
     document_node = BeautifulSoup(markup=site_content, features='html')
 
+    # TODO: Возможна слишком большая нагрузка для большого дерева и бОльшего количества
+    #   уровней; можно оптимизировать.
     nodes = _get_limited_depth_nodes(document_node, level=3)
 
     return site_url
