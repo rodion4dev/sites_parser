@@ -1,5 +1,6 @@
 """Модуль с настройками Celery очередей."""
 import os
+from pathlib import Path
 
 from celery import Celery
 
@@ -27,6 +28,10 @@ class _CeleryResultsBackendConfig:
 class Config(_CeleryBrokerConfig, _CeleryResultsBackendConfig):
     """Общая конфигурация проекта."""
 
+    MEDIA_ROOT_PATH: Path = Path(
+        os.environ.get('MEDIA_ROOT_PATH', default='')
+    ).absolute()
+
 
 broker_url_template = (
     '{transport}://{userid}:{password}@{hostname}:' '{port}/{virtual_host}'
@@ -51,8 +56,5 @@ backend = backend_url_template.format(
 )
 
 application = Celery(
-    main='parse',
-    backend=backend,
-    broker=broker,
-    include=['parse.tasks'],
+    main='parse', backend=backend, broker=broker, include=['parse.tasks'],
 )
