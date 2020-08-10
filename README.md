@@ -67,7 +67,7 @@ docker-compose up
 
 #### Ошибка на стороне сервера
 
-**Код ответа** : `505 Internal Server Error`
+**Код ответа** : `500 Internal Server Error`
 
 **Пример ответа** :
 
