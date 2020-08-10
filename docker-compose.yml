@@ -7,6 +7,7 @@ services:
     depends_on:
       - database
       - parser
+      - nginx
     env_file:
       - .example.api.env
       - .celery.env
@@ -29,3 +30,11 @@ services:
       - .celery.env
     volumes:
       - './parse:/usr/src/app/parse'
+      - './media:/usr/src/app/media'
+
+  nginx:
+    image: nginx:1.19-alpine
+    ports:
+      - '8080:80'
+    volumes:
+      - './media:/usr/share/nginx/html:ro'
