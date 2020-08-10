@@ -42,11 +42,9 @@ def _find_file_url(node: BeautifulSoup) -> Optional[str]:
     TODO: Не совсем корректный вариант поиска; окончание ссылки на filename.extension
         не говорит о том, что в качестве ответа вернётся файл.
     """
-    escaped_file_extensions = [
-        re.escape(extension) for extension in Config.PARSE_FILE_EXTENSIONS
-    ]
-    file_extensions = r'|'.join(escaped_file_extensions)
-    is_file_url_pattern = re.compile(rf'^https?://\w*{file_extensions}$')
+    file_suffixes = '|'.join(Config.PARSE_FILE_SUFFIXES)
+    file_suffixes_group = rf'({file_suffixes})'
+    is_file_url_pattern = re.compile(rf'^https?://\S*\.{file_suffixes_group}$')
 
     if node.name in ['img', 'script']:
         source = node.attrs.get('src', '')
@@ -110,5 +108,7 @@ def parse_site(current_task: Task, site_url: str) -> str:
     if list(task_directory.iterdir()):
         archive_path = Config.MEDIA_ROOT_PATH / f'{current_task.request.id}.tar.gz'
         with tarfile.open(str(archive_path), 'w:gz') as tar:
-            tar.add(str(task_directory.absolute()))
+            tar.add(
+                str(task_directory.absolute()), arcname=str(current_task.request.id)
+            )
         return Config.FILES_PROXY_RESOURCE + archive_path.name

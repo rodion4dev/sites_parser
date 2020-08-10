@@ -31,9 +31,7 @@ class Config(_CeleryBrokerConfig, _CeleryResultsBackendConfig):
     MEDIA_ROOT_PATH: Path = Path(
         os.environ.get('MEDIA_ROOT_PATH', default='')
     ).absolute()
-    PARSE_FILE_EXTENSIONS = os.environ.get('PARSE_FILE_EXTENSIONS', default='').split(
-        ','
-    )
+    PARSE_FILE_SUFFIXES = os.environ.get('PARSE_FILE_SUFFIXES', default='').split(',')
     FILES_PROXY_RESOURCE = os.environ['FILES_PROXY_RESOURCE']
 
 
