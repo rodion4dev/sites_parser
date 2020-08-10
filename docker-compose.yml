@@ -16,7 +16,6 @@ services:
       - '5000:5000'
     volumes:
       - './api:/usr/src/app/api'
-      - './media:/usr/src/app/media'
 
   database:
     image: redis:6.0-alpine
@@ -30,4 +29,3 @@ services:
       - .celery.env
     volumes:
       - './parse:/usr/src/app/parse'
-      - './media:/usr/src/app/media'
