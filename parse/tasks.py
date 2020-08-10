@@ -1,5 +1,6 @@
 """Набор задач для проекта."""
 import tarfile
+from pathlib import Path
 from shutil import copyfileobj
 from typing import List
 
@@ -16,6 +17,9 @@ LATEST_ELEMENT_INDEX = -1
 def _get_limited_depth_nodes(node: BeautifulSoup, level: int = 1):
     """
     Складирование элементов дерева (и вложенных в него) одного уровня в один список.
+
+    # TODO: Возможна слишком большая нагрузка для большого дерева и бОльшего количества
+    #   уровней; можно оптимизировать.
 
     :param level: Лимитирование глубины.
     :param node: Корневой элемент дерева, с которого начинается обход.
@@ -35,23 +39,19 @@ def _find_file_urls(node: BeautifulSoup) -> List[str]:
     return ['']
 
 
-@application.task(bind=True)
-def parse_site(current_task: Task, site_url: str):
-    """Парсинг указанного сайта."""
-    site_response = requests.get(site_url)
-    site_content = site_response.content.decode()
+def _get_file_urls_from_site_content(site_content: str):
     document_node = BeautifulSoup(markup=site_content, features='html')
-
-    # TODO: Возможна слишком большая нагрузка для большого дерева и бОльшего количества
-    #   уровней; можно оптимизировать.
     nodes = _get_limited_depth_nodes(document_node, level=3)
     file_urls = []
     for one_depth_nodes in nodes:
         for node in one_depth_nodes:
             file_urls.extend(_find_file_urls(node))
+    return file_urls
 
-    task_directory = Config.MEDIA_ROOT_PATH / current_task.request.id
-    task_directory.mkdir(mode=0o755)
+
+def _download_files(file_urls: List[str], directory: Path) -> List[str]:
+    """Загрузка файлов по указанным ссылкам."""
+    file_paths = []
     for file_url in file_urls:
         local_filename = file_url.split('/')[LATEST_ELEMENT_INDEX]
         with requests.get(file_url, stream=True) as response:
@@ -60,11 +60,29 @@ def parse_site(current_task: Task, site_url: str):
             except HTTPError:
                 continue
 
-            with (task_directory / local_filename).open(mode='wb') as file:
+            with (directory / local_filename).open(mode='wb') as file:
                 copyfileobj(response.raw, file)
+        file_paths.append(str(directory / local_filename))
+    return file_paths
+
+
+@application.task(bind=True)
+def parse_site(current_task: Task, site_url: str):
+    """Парсинг указанного сайта."""
+    try:
+        site_response = requests.get(site_url)
+        site_response.raise_for_status()
+        site_content = site_response.content.decode()
+    except HTTPError as error:
+        return str(error)
+
+    file_urls = _get_file_urls_from_site_content(site_content)
+    task_directory = Config.MEDIA_ROOT_PATH / current_task.request.id
+    task_directory.mkdir(mode=0o755)
+    file_paths = _download_files(file_urls, task_directory)
 
     with tarfile.open(Config.MEDIA_ROOT_PATH / current_task.request.id, 'w:gz') as tar:
-        for file in task_directory.iterdir():
-            tar.add(file.name)
+        for file_name in file_paths:
+            tar.add(file_name)
 
-    return site_url
+    return task_directory.absolute()
