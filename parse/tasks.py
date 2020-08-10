@@ -1,8 +1,9 @@
 """Набор задач для проекта."""
+import re
 import tarfile
 from pathlib import Path
 from shutil import copyfileobj
-from typing import List
+from typing import List, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -34,19 +35,40 @@ def _get_limited_depth_nodes(node: BeautifulSoup, level: int = 1):
     return depths
 
 
-def _find_file_urls(node: BeautifulSoup) -> List[str]:
-    """Поиск путей к файлам из указанного элемента дерева."""
-    return ['']
+def _find_file_url(node: BeautifulSoup) -> Optional[str]:
+    """
+    Поиск путей к файлам из указанного элемента дерева.
+
+    TODO: Не совсем корректный вариант поиска; окончание ссылки на filename.extension
+        не говорит о том, что в качестве ответа вернётся файл.
+    """
+    escaped_file_extensions = [re.escape(extension) for extension
+                               in Config.PARSE_FILE_EXTENSIONS]
+    file_extensions = r'|'.join(escaped_file_extensions)
+    is_file_url_pattern = re.compile(rf'^https?://\w*{file_extensions}$')
+
+    if node.name in ['img', 'script']:
+        source = node.attrs.get('src', default='')
+        is_file_url = is_file_url_pattern.match(source)
+        return source if is_file_url else None
+    elif node.name in ['link', 'a']:
+        href = node.attrs.get('href', default='')
+        is_file_url = is_file_url_pattern.match(href)
+        return href if is_file_url else None
+    elif not node.name:
+        is_file_url = is_file_url_pattern.match(node.title)
+        return node.title if is_file_url else None
 
 
-def _get_file_urls_from_site_content(site_content: str):
+def _get_file_urls_from_site_content(site_content: str) -> List[str]:
+    """Получение ссылок до любых файлов из указанного содержимого."""
     document_node = BeautifulSoup(markup=site_content, features='html')
     nodes = _get_limited_depth_nodes(document_node, level=3)
     file_urls = []
     for one_depth_nodes in nodes:
         for node in one_depth_nodes:
-            file_urls.extend(_find_file_urls(node))
-    return file_urls
+            file_urls.append(_find_file_url(node))
+    return list(filter(None, file_urls))
 
 
 def _download_files(file_urls: List[str], directory: Path):
