@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+
+  api:
+    build: .
+    command: ["flask", "run", "--host", "0.0.0.0"]
+    depends_on:
+      - database
+      - parser
+      - nginx
+    env_file:
+      - .example.api.env
+      - .celery.env
+    environment:
+      FLASK_ENV: 'development'
+    ports:
+      - '5000:5000'
+    volumes:
+      - './api:/usr/src/app/api'
+
+  database:
+    image: redis:6.0-alpine
+
+  parser:
+    build: .
+    command: ["celery", "worker", "--app", "parse", "--loglevel=INFO"]
+    depends_on:
+      - database
+    env_file:
+      - .celery.env
+    volumes:
+      - './parse:/usr/src/app/parse'
+      - './media:/usr/src/app/media'
+
+  nginx:
+    image: nginx:1.19-alpine
+    ports:
+      - '8080:80'
+    volumes:
+      - './media:/usr/share/nginx/html:ro'

@@ -1,0 +1,7 @@
+.dockerignore
+**.env
+.gitignore
+docker-compose.yml
+Dockerfile
+media/
+.DS_Store
