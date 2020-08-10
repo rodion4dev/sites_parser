@@ -31,7 +31,9 @@ class Config(_CeleryBrokerConfig, _CeleryResultsBackendConfig):
     MEDIA_ROOT_PATH: Path = Path(
         os.environ.get('MEDIA_ROOT_PATH', default='')
     ).absolute()
-    PARSE_FILE_EXTENSIONS = os.environ.get('PARSE_FILE_EXTENSIONS', default='').split(',')
+    PARSE_FILE_EXTENSIONS = os.environ.get('PARSE_FILE_EXTENSIONS', default='').split(
+        ','
+    )
 
 
 broker_url_template = (

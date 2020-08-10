@@ -42,8 +42,9 @@ def _find_file_url(node: BeautifulSoup) -> Optional[str]:
     TODO: Не совсем корректный вариант поиска; окончание ссылки на filename.extension
         не говорит о том, что в качестве ответа вернётся файл.
     """
-    escaped_file_extensions = [re.escape(extension) for extension
-                               in Config.PARSE_FILE_EXTENSIONS]
+    escaped_file_extensions = [
+        re.escape(extension) for extension in Config.PARSE_FILE_EXTENSIONS
+    ]
     file_extensions = r'|'.join(escaped_file_extensions)
     is_file_url_pattern = re.compile(rf'^https?://\w*{file_extensions}$')
 
