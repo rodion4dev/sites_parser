@@ -50,7 +50,12 @@ def _get_file_urls_from_site_content(site_content: str):
 
 
 def _download_files(file_urls: List[str], directory: Path):
-    """Загрузка файлов по указанным ссылкам."""
+    """
+    Загрузка файлов по указанным ссылкам.
+
+    :param file_urls: Ссылки до загружаемых файлов.
+    :param directory: Директория, в которой располагаются загружаемые файлы.
+    """
     for file_url in file_urls:
         local_filename = file_url.split('/')[LATEST_ELEMENT_INDEX]
         with requests.get(file_url, stream=True) as response:
