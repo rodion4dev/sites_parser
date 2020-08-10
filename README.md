@@ -24,7 +24,7 @@ docker-compose up
 * Python (проверено на 3.8 версии)
 * Redis сервер (проверено на 6.0)
 * Зависимости из requirements.txt
-* Установленные переменные окружения из .example.api.env b .celery.env
+* Установленные переменные окружения из .example.api.env и .celery.env
 
 ## REST интерфейс проекта
 
