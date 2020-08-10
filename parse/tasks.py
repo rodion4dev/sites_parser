@@ -49,7 +49,7 @@ def _find_file_url(node: BeautifulSoup) -> Optional[str]:
     is_file_url_pattern = re.compile(rf'^https?://\w*{file_extensions}$')
 
     if node.name in ['img', 'script']:
-        source = node.attrs.get('src', default='')
+        source = node.attrs.get('src', '')
         is_file_url = is_file_url_pattern.match(source)
         return source if is_file_url else None
     elif node.name in ['link', 'a']:
@@ -63,7 +63,7 @@ def _find_file_url(node: BeautifulSoup) -> Optional[str]:
 
 def _get_file_urls_from_site_content(site_content: str) -> List[str]:
     """Получение ссылок до любых файлов из указанного содержимого."""
-    document_node = BeautifulSoup(markup=site_content, features='html')
+    document_node = BeautifulSoup(markup=site_content, features='html.parser')
     nodes = _get_limited_depth_nodes(document_node, level=3)
     file_urls = []
     for one_depth_nodes in nodes:
@@ -92,7 +92,7 @@ def _download_files(file_urls: List[str], directory: Path):
 
 
 @application.task(bind=True)
-def parse_site(current_task: Task, site_url: str):
+def parse_site(current_task: Task, site_url: str) -> str:
     """Парсинг указанного сайта."""
     try:
         site_response = requests.get(site_url)
@@ -111,4 +111,4 @@ def parse_site(current_task: Task, site_url: str):
     with tarfile.open(archive_path, 'w:gz') as tar:
         tar.add(task_directory.absolute())
 
-    return task_directory.absolute()
+    return str(task_directory.absolute())
