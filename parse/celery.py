@@ -34,6 +34,7 @@ class Config(_CeleryBrokerConfig, _CeleryResultsBackendConfig):
     PARSE_FILE_EXTENSIONS = os.environ.get('PARSE_FILE_EXTENSIONS', default='').split(
         ','
     )
+    FILES_PROXY_RESOURCE = os.environ['FILES_PROXY_RESOURCE']
 
 
 broker_url_template = (

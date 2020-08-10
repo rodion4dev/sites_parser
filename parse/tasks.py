@@ -107,8 +107,8 @@ def parse_site(current_task: Task, site_url: str) -> str:
     file_urls = _get_file_urls_from_site_content(site_content)
     _download_files(file_urls, task_directory)
 
-    archive_path = str(Config.MEDIA_ROOT_PATH / f'{current_task.request.id}.tar.gz')
-    with tarfile.open(archive_path, 'w:gz') as tar:
-        tar.add(task_directory.absolute())
-
-    return str(task_directory.absolute())
+    if list(task_directory.iterdir()):
+        archive_path = Config.MEDIA_ROOT_PATH / f'{current_task.request.id}.tar.gz'
+        with tarfile.open(str(archive_path), 'w:gz') as tar:
+            tar.add(str(task_directory.absolute()))
+        return Config.FILES_PROXY_RESOURCE + archive_path.name
