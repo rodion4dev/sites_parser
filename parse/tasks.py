@@ -2,7 +2,7 @@
 import re
 import tarfile
 from pathlib import Path
-from shutil import copyfileobj
+from shutil import copyfileobj, rmtree
 from typing import List, Optional
 
 import requests
@@ -89,8 +89,7 @@ def _download_files(file_urls: List[str], directory: Path):
                 copyfileobj(response.raw, file)
 
 
-@application.task(bind=True)
-def parse_site(current_task: Task, site_url: str) -> str:
+def _parse_site(site_url: str, storage_name: str) -> Optional[str]:
     """Парсинг указанного сайта."""
     try:
         site_response = requests.get(site_url)
@@ -99,16 +98,24 @@ def parse_site(current_task: Task, site_url: str) -> str:
     except HTTPError as error:
         return str(error)
 
-    task_directory = Config.MEDIA_ROOT_PATH / current_task.request.id
-    task_directory.mkdir(mode=0o755)
+    storage_path = Config.MEDIA_ROOT_PATH / storage_name
+    storage_path.mkdir(mode=0o755)
 
     file_urls = _get_file_urls_from_site_content(site_content)
-    _download_files(file_urls, task_directory)
+    _download_files(file_urls, storage_path)
 
-    if list(task_directory.iterdir()):
-        archive_path = Config.MEDIA_ROOT_PATH / f'{current_task.request.id}.tar.gz'
-        with tarfile.open(str(archive_path), 'w:gz') as tar:
-            tar.add(
-                str(task_directory.absolute()), arcname=str(current_task.request.id)
-            )
-        return Config.FILES_PROXY_RESOURCE + archive_path.name
+    archive_url = None
+    if list(storage_path.iterdir()):
+        archive_path = Config.MEDIA_ROOT_PATH / f'{storage_name}.tar.gz'
+        with tarfile.open(str(archive_path), 'w:gz') as archive:
+            archive.add(str(storage_path.absolute()), arcname=storage_name)
+        archive_url = Config.FILES_PROXY_RESOURCE + archive_path.name
+
+    rmtree(str(storage_path))
+    return archive_url
+
+
+@application.task(bind=True)
+def parse_site(current_task: Task, site_url: str) -> str:
+    """Celery задача для парсинга сайта."""
+    return _parse_site(site_url, str(current_task.request.id))
