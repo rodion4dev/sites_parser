@@ -49,9 +49,8 @@ def _get_file_urls_from_site_content(site_content: str):
     return file_urls
 
 
-def _download_files(file_urls: List[str], directory: Path) -> List[str]:
+def _download_files(file_urls: List[str], directory: Path):
     """Загрузка файлов по указанным ссылкам."""
-    file_paths = []
     for file_url in file_urls:
         local_filename = file_url.split('/')[LATEST_ELEMENT_INDEX]
         with requests.get(file_url, stream=True) as response:
@@ -62,8 +61,6 @@ def _download_files(file_urls: List[str], directory: Path) -> List[str]:
 
             with (directory / local_filename).open(mode='wb') as file:
                 copyfileobj(response.raw, file)
-        file_paths.append(str(directory / local_filename))
-    return file_paths
 
 
 @application.task(bind=True)
@@ -76,13 +73,14 @@ def parse_site(current_task: Task, site_url: str):
     except HTTPError as error:
         return str(error)
 
-    file_urls = _get_file_urls_from_site_content(site_content)
     task_directory = Config.MEDIA_ROOT_PATH / current_task.request.id
     task_directory.mkdir(mode=0o755)
-    file_paths = _download_files(file_urls, task_directory)
 
-    with tarfile.open(Config.MEDIA_ROOT_PATH / current_task.request.id, 'w:gz') as tar:
-        for file_name in file_paths:
-            tar.add(file_name)
+    file_urls = _get_file_urls_from_site_content(site_content)
+    _download_files(file_urls, task_directory)
+
+    archive_path = str(Config.MEDIA_ROOT_PATH / f'{current_task.request.id}.tar.gz')
+    with tarfile.open(archive_path, 'w:gz') as tar:
+        tar.add(task_directory.absolute())
 
     return task_directory.absolute()
