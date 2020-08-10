@@ -30,7 +30,7 @@ def resource_not_found(error):
 @blueprint.errorhandler(HTTPStatus.INTERNAL_SERVER_ERROR.value)
 def internal_server_error(error):
     """Обработка ошибки 500: Внутренняя ошибка сервера."""
-    return (jsonify(error=error.description), HTTPStatus.INTERNAL_SERVER_ERROR.value)
+    return jsonify(error=error.description), HTTPStatus.INTERNAL_SERVER_ERROR.value
 
 
 @blueprint.route('/task/<uuid:identifier>', methods=['GET'])
